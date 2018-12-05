@@ -4,6 +4,7 @@ import '../styles/app.css'
 // Import libraries we need.
 import { default as Web3 } from 'web3'
 import { default as contract } from 'truffle-contract'
+import { default as RelayClient } from './relayclient'
 
 // Import our contract artifacts and turn them into usable abstractions.
 import metaCoinArtifact from '../../build/contracts/MetaCoin.json'
@@ -17,12 +18,26 @@ const MetaCoin = contract(metaCoinArtifact)
 let accounts
 let account
 
+let utils =require( './relayclient/utils' )
+
 const App = {
+
+	utils : utils,
+
   start: function () {
     const self = this
 
+	var relayclient = new RelayClient(web3, {
+		verbose:true,
+			txfee: 12,
+			force_gasPrice: 1000000,
+			force_gasLimit: 1000000
+	} )
+
+
     // Bootstrap the MetaCoin abstraction for Use.
     MetaCoin.setProvider(web3.currentProvider)
+	relayclient.hook(MetaCoin)
 
     // Get the initial account balance so it can be displayed.
     web3.eth.getAccounts(function (err, accs) {
@@ -48,7 +63,24 @@ const App = {
     status.innerHTML = message
   },
 
-  refreshBalance: function () {
+  getBalance : async function(account) {
+  	return new Promise((resolve,reject) => {
+  		web3.eth.getBalance(account, (err,res)=>{
+  			if (err) reject(err)
+			else resolve(res)
+  		})
+  	})
+  }, 
+  refreshBalance : async function()  {
+  	  	const meta = await MetaCoin.deployed()
+	  	const b = await meta.getBalance.call(account, {from:account} )
+	  	const eth = await App.getBalance(account)
+		const balanceElement = document.getElementById('balance')
+	  	balanceElement.innerHTML = "coins: "+b.valueOf() +
+	  			"<br>wei: " +eth.valueOf()
+
+  },
+  refreshBalance1: function () {
     const self = this
 
     let meta
@@ -56,6 +88,7 @@ const App = {
       meta = instance
       return meta.getBalance.call(account, { from: account })
     }).then(function (value) {
+	console.log( "getBalance value=", value)
       const balanceElement = document.getElementById('balance')
       balanceElement.innerHTML = value.valueOf()
     }).catch(function (e) {
