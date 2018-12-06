@@ -1,6 +1,6 @@
 pragma solidity ^0.4.24;
 
-import "./relayContracts/RelayRecipient.sol";
+import "tabookey-gasless/contracts/RelayRecipient.sol";
 
 import "./ConvertLib.sol";
 
@@ -33,10 +33,10 @@ is RelayRecipient
 	}
 
 	function sendCoin(address receiver, uint amount) public returns(bool sufficient) {
-		if (balances[msg.sender] < amount) return false;
-		balances[msg.sender] -= amount;
+		require (balances[get_sender()] >= amount);
+		balances[get_sender()] -= amount;
 		balances[receiver] += amount;
-		emit Transfer(msg.sender, receiver, amount);
+		emit Transfer(get_sender(), receiver, amount);
 		return true;
 	}
 

@@ -4,7 +4,7 @@ import '../styles/app.css'
 // Import libraries we need.
 import { default as Web3 } from 'web3'
 import { default as contract } from 'truffle-contract'
-import { default as RelayClient } from './relayclient'
+import { default as RelayClient } from 'tabookey-gasless/client'
 
 // Import our contract artifacts and turn them into usable abstractions.
 import metaCoinArtifact from '../../build/contracts/MetaCoin.json'
@@ -18,11 +18,7 @@ const MetaCoin = contract(metaCoinArtifact)
 let accounts
 let account
 
-let utils =require( './relayclient/utils' )
-
 const App = {
-
-	utils : utils,
 
   start: function () {
     const self = this
@@ -34,7 +30,7 @@ const App = {
 			force_gasLimit: 1000000
 	} )
 
-
+	this.MetaCoin = MetaCoin
     // Bootstrap the MetaCoin abstraction for Use.
     MetaCoin.setProvider(web3.currentProvider)
 	relayclient.hook(MetaCoin)
@@ -65,19 +61,34 @@ const App = {
 
   getBalance : async function(account) {
   	return new Promise((resolve,reject) => {
+		try {
   		web3.eth.getBalance(account, (err,res)=>{
   			if (err) reject(err)
 			else resolve(res)
   		})
+		} catch (e) { reject(e) }
   	})
+  }, 
+  getDepositBalance : async function(account) {
+    return new Promise((resolve,reject) => {
+    try {
+      web3.eth.getBalance(account, (err,res)=>{
+        if (err) reject(err)
+      else resolve(res)
+      })
+    } catch (e) { reject(e) }
+    })
   }, 
   refreshBalance : async function()  {
   	  	const meta = await MetaCoin.deployed()
+		this.meta=meta
 	  	const b = await meta.getBalance.call(account, {from:account} )
 	  	const eth = await App.getBalance(account)
 		const balanceElement = document.getElementById('balance')
-	  	balanceElement.innerHTML = "coins: "+b.valueOf() +
-	  			"<br>wei: " +eth.valueOf()
+	  	balanceElement.innerHTML = b.valueOf() 
+    document.getElementById('contractaddr').innerHTML = meta.address
+		document.getElementById('weibalance').innerHTML = await App.getBalance(account)
+		document.getElementById('contractbalance').innerHTML = await App.getBalance(meta.address)
 
   },
   refreshBalance1: function () {
