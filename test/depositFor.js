@@ -6,7 +6,11 @@ describe("deposit", async () => {
 		meta = await MetaCoin.at("0x9b1f7f645351af3631a656421ed2e40f2802e6c0" )
 		console.log( "meta adddr=",meta.address)
 
+		try {
 		hubaddr = await meta.get_relay_hub();
+		} catch (e) {
+			assert.ok( 0, "RelayHub not deployed. must restart it from tabookey-gasless project itself" )
+		}
 		console.log( "hub addr=", hubaddr)
 		hub = RelayHub.at(hubaddr)
 

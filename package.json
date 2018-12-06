@@ -47,6 +47,7 @@
   },
   "dependencies": {
     "browser-request": "^0.3.3",
-    "es6-promisify": "^6.0.1"
+    "es6-promisify": "^6.0.1",
+    "tabookey-gasless": "file:../relay/tabookey-gasless-0.1.0.tgz"
   }
 }
