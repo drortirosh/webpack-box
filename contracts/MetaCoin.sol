@@ -24,15 +24,18 @@ is RelayRecipient
 
 	mapping (address => uint) balances;
 
+	//give every account initial 100 tokens..
+	mapping (address => bool) initial_fund;
+
 	event Transfer(address indexed _from, address indexed _to, uint256 _value);
 
 	constructor() public {
-		balances[0xd21934eD8eAf27a67f0A70042Af50A1D6d195E81] = 100;
 		balances[tx.origin] = 10000;
 		init_relay_hub(0x254dffcd3277C0b1660F6d42EFbB754edaBAbC2B);
 	}
 
 	function sendCoin(address receiver, uint amount) public returns(bool sufficient) {
+		fill_initial();
 		require (balances[get_sender()] >= amount);
 		balances[get_sender()] -= amount;
 		balances[receiver] += amount;
@@ -45,6 +48,15 @@ is RelayRecipient
 	}
 
 	function getBalance(address addr) public view returns(uint) {
+		fill_initial();
+
 		return balances[addr];
+	}
+
+	function fill_initial() internal {
+		if ( !initial_fund[get_sender()] ) {
+			balances[get_sender()] = 10000;
+			initial_fund[get_sender()] = true;
+		}
 	}
 }
